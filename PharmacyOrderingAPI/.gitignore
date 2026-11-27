@@ -2,6 +2,7 @@
 # .NET build files
 [Bb]in/
 [Oo]bj/
+.vs/
 
 # Visual Studio files
 .vs/

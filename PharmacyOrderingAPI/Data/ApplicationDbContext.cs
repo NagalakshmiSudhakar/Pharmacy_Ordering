@@ -5,8 +5,7 @@ using PharmacyOrderingAPI.Models;
 
 namespace PharmacyOrderingAPI.Data
 {
-    public class ApplicationDbContext
-        : IdentityDbContext<ApplicationUser>
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(
             DbContextOptions<ApplicationDbContext> options)
@@ -27,7 +26,7 @@ namespace PharmacyOrderingAPI.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configure ASP.NET Core Identity first
+            // Identity configuration
             base.OnModelCreating(modelBuilder);
 
             // ApplicationUser configuration
@@ -60,7 +59,7 @@ namespace PharmacyOrderingAPI.Data
                     .HasMaxLength(50);
 
                 entity.Property(m => m.Price)
-                    .HasPrecision(10, 2);
+                    .HasColumnType("decimal(10,2)");
             });
 
             // Cart configuration

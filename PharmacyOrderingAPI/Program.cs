@@ -7,10 +7,8 @@ using Microsoft.IdentityModel.Tokens;
 using PharmacyOrderingAPI.Data;
 using PharmacyOrderingAPI.Helpers;
 using PharmacyOrderingAPI.Models;
-
 using PharmacyOrderingAPI.Repository;
 using PharmacyOrderingAPI.Repository.Interfaces;
-
 using PharmacyOrderingAPI.Services;
 using PharmacyOrderingAPI.Services.Interfaces;
 
@@ -117,7 +115,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Authentication helpers and seeding
+// Authentication helpers and role seeding
 builder.Services.AddScoped<JwtHelper>();
 builder.Services.AddScoped<RoleSeeder>();
 
