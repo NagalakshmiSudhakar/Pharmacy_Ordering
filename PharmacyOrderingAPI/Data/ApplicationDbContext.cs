@@ -1,10 +1,12 @@
 
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PharmacyOrderingAPI.Models;
 
 namespace PharmacyOrderingAPI.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext
+        : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(
             DbContextOptions<ApplicationDbContext> options)
@@ -12,33 +14,41 @@ namespace PharmacyOrderingAPI.Data
         {
         }
 
-        public DbSet<User> Users { get; set; }
+        public DbSet<Medicine> Medicines => Set<Medicine>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>(entity =>
+            modelBuilder.Entity<ApplicationUser>(entity =>
             {
-                entity.HasKey(u => u.Id);
-
                 entity.Property(u => u.FullName)
                     .IsRequired()
                     .HasMaxLength(100);
 
-                entity.Property(u => u.Email)
+                entity.Property(u => u.IsActive)
                     .IsRequired()
-                    .HasMaxLength(150);
+                    .HasDefaultValue(true);
+            });
 
-                entity.HasIndex(u => u.Email)
-                    .IsUnique();
+            modelBuilder.Entity<Medicine>(entity =>
+            {
+                entity.HasKey(m => m.MedicineId);
 
-                entity.Property(u => u.PasswordHash)
-                    .IsRequired();
-
-                entity.Property(u => u.Role)
+                entity.Property(m => m.Name)
                     .IsRequired()
-                    .HasMaxLength(20);
+                    .HasMaxLength(100);
+
+                entity.Property(m => m.Description)
+                    .IsRequired()
+                    .HasMaxLength(500);
+
+                entity.Property(m => m.Category)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(m => m.Price)
+                    .HasColumnType("decimal(10,2)");
             });
         }
     }
