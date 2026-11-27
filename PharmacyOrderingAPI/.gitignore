@@ -1,0 +1,22 @@
+
+# .NET build files
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+
+# Angular dependencies and build files
+node_modules/
+dist/
+.angular/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
