@@ -1,5 +1,6 @@
 
 using Microsoft.EntityFrameworkCore;
+using PharmacyOrderingAPI.Models;
 
 namespace PharmacyOrderingAPI.Data
 {
@@ -9,5 +10,7 @@ namespace PharmacyOrderingAPI.Data
             : base(options)
         {
         }
+
+        public DbSet<Medicine> Medicines { get; set; }
     }
 }
