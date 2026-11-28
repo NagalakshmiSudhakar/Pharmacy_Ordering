@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Identity;
 using PharmacyOrderingAPI.Models;
 
@@ -20,9 +19,8 @@ namespace PharmacyOrderingAPI.Data
             _configuration = configuration;
         }
 
-        public async Task SeedAsync()
+        public async Task SeedRolesAndAdminAsync()
         {
-            // Create roles if they don't exist
             string[] roles = { "Admin", "Customer" };
 
             foreach (var role in roles)
@@ -34,72 +32,59 @@ namespace PharmacyOrderingAPI.Data
 
                     if (!result.Succeeded)
                     {
-                        throw new InvalidOperationException(
+                        throw new Exception(
                             $"Failed to create role {role}: " +
                             string.Join(", ", result.Errors.Select(e => e.Description)));
                     }
                 }
             }
 
-            // Read Admin credentials from secure configuration
-            var fullName = _configuration["AdminSeed:FullName"];
-            var email = _configuration["AdminSeed:Email"]?
-                .Trim().ToLowerInvariant();
-            var password = _configuration["AdminSeed:Password"];
+            var adminName = _configuration["AdminSeed:FullName"];
+            var adminEmail = _configuration["AdminSeed:Email"];
+            var adminPassword = _configuration["AdminSeed:Password"];
 
-            if (string.IsNullOrWhiteSpace(fullName) ||
-                string.IsNullOrWhiteSpace(email) ||
-                string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(adminEmail) ||
+                string.IsNullOrWhiteSpace(adminPassword))
             {
                 throw new InvalidOperationException(
-                    "Admin seed configuration is missing.");
+                    "AdminSeed credentials are missing from configuration.");
             }
 
-            // Avoid duplicate Admin creation
-            var existingUser = await _userManager.FindByEmailAsync(email);
+            var admin = await _userManager.FindByEmailAsync(adminEmail);
 
-
-            if (existingUser != null)
+            if (admin == null)
             {
-                if (!await _userManager.IsInRoleAsync(existingUser, "Admin"))
+                admin = new ApplicationUser
                 {
-                    throw new InvalidOperationException(
-                        "The configured Admin email already belongs to a non-Admin account. " +
-                        "Please configure a different AdminSeed email.");
+                    UserName = adminEmail,
+                    Email = adminEmail,
+                    FullName = adminName ?? "Administrator",
+                    EmailConfirmed = true,
+                    IsActive = true
+                };
+
+                var createResult = await _userManager.CreateAsync(
+                    admin, adminPassword);
+
+                if (!createResult.Succeeded)
+                {
+                    throw new Exception(
+                        "Failed to create admin: " +
+                        string.Join(", ", createResult.Errors.Select(e => e.Description)));
                 }
-
-                Console.WriteLine("Admin account already exists.");
-                return;
             }
 
-            var admin = new ApplicationUser
+            if (!await _userManager.IsInRoleAsync(admin, "Admin"))
             {
-                UserName = email,
-                Email = email,
-                FullName = fullName,
-                EmailConfirmed = true,
-                IsActive = true
-            };
+                var roleResult = await _userManager.AddToRoleAsync(admin, "Admin");
 
-            var createResult = await _userManager.CreateAsync(admin, password);
-
-            if (!createResult.Succeeded)
-            {
-                throw new InvalidOperationException(
-                    "Admin creation failed: " +
-                    string.Join(", ", createResult.Errors.Select(e => e.Description)));
+                if (!roleResult.Succeeded)
+                {
+                    throw new Exception(
+                        "Failed to assign Admin role: " +
+                        string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+                }
             }
-
-            var addRoleResult = await _userManager.AddToRoleAsync(admin, "Admin");
-
-            if (!addRoleResult.Succeeded)
-            {
-                throw new InvalidOperationException(
-                    "Failed to assign Admin role: " +
-                    string.Join(", ", addRoleResult.Errors.Select(e => e.Description)));
-            }
-
-            Console.WriteLine("Initial Admin account created successfully.");
         }
     }
 }

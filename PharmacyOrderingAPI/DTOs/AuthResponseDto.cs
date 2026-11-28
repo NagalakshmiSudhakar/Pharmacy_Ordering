@@ -13,6 +13,7 @@ namespace PharmacyOrderingAPI.DTOs
 
         public string Token { get; set; } = string.Empty;
 
-        public DateTime Expiration { get; set; }
+        // Always serialise as UTC ISO-8601 with 'Z' so the browser parses it correctly
+        public DateTime Expiration { get; set; } = DateTime.UtcNow;
     }
 }

@@ -1,6 +1,6 @@
 
 using System.Security.Claims;
-//using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using PharmacyOrderingAPI.DTOs.Cart;
@@ -10,7 +10,7 @@ namespace PharmacyOrderingAPI.Controllers
 {
     [Route("api/cart")]
     [ApiController]
-    //[Authorize(Roles = "Customer")]
+    [Authorize(Roles = "Customer")]
     public class CartController : ControllerBase
     {
         private readonly ICartService _cartService;

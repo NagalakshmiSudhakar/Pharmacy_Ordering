@@ -29,8 +29,10 @@ namespace PharmacyOrderingAPI.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto dto)
         {
+            // Normalize email
             var email = dto.Email.Trim().ToLowerInvariant();
 
+            // Check whether email already exists
             var existingUser = await _userManager.FindByEmailAsync(email);
 
             if (existingUser != null)
@@ -41,16 +43,23 @@ namespace PharmacyOrderingAPI.Controllers
                 });
             }
 
+            // Create new customer
             var user = new ApplicationUser
             {
                 UserName = email,
                 Email = email,
                 FullName = dto.FullName.Trim(),
+                PhoneNumber = dto.PhoneNumber.Trim(),
                 IsActive = true,
-                EmailConfirmed = false
+                EmailConfirmed = false,
+                CreatedAt = DateTime.UtcNow
             };
 
-            var result = await _userManager.CreateAsync(user, dto.Password);
+            // Create user with hashed password
+            var result = await _userManager.CreateAsync(
+                user,
+                dto.Password
+            );
 
             if (!result.Succeeded)
             {
@@ -61,7 +70,11 @@ namespace PharmacyOrderingAPI.Controllers
                 });
             }
 
-            var roleResult = await _userManager.AddToRoleAsync(user, "Customer");
+            // Assign Customer role
+            var roleResult = await _userManager.AddToRoleAsync(
+                user,
+                "Customer"
+            );
 
             if (!roleResult.Succeeded)
             {
@@ -77,7 +90,9 @@ namespace PharmacyOrderingAPI.Controllers
             {
                 message = "Customer registered successfully.",
                 userId = user.Id,
+                fullName = user.FullName,
                 email = user.Email,
+                phoneNumber = user.PhoneNumber,
                 role = "Customer"
             });
         }
@@ -86,8 +101,10 @@ namespace PharmacyOrderingAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto dto)
         {
+            // Normalize email
             var email = dto.Email.Trim().ToLowerInvariant();
 
+            // Find user
             var user = await _userManager.FindByEmailAsync(email);
 
             if (user == null)
@@ -98,6 +115,7 @@ namespace PharmacyOrderingAPI.Controllers
                 });
             }
 
+            // Check account status
             if (!user.IsActive)
             {
                 return Unauthorized(new
@@ -106,10 +124,13 @@ namespace PharmacyOrderingAPI.Controllers
                 });
             }
 
-            var passwordValid = await _signInManager.CheckPasswordSignInAsync(
-                user,
-                dto.Password,
-                lockoutOnFailure: true);
+            // Validate password
+            var passwordValid =
+                await _signInManager.CheckPasswordSignInAsync(
+                    user,
+                    dto.Password,
+                    lockoutOnFailure: true
+                );
 
             if (!passwordValid.Succeeded)
             {
@@ -119,6 +140,7 @@ namespace PharmacyOrderingAPI.Controllers
                 });
             }
 
+            // Get assigned roles
             var roles = await _userManager.GetRolesAsync(user);
 
             if (roles.Count == 0)
@@ -129,8 +151,13 @@ namespace PharmacyOrderingAPI.Controllers
                 });
             }
 
-            var tokenResult = _jwtHelper.GenerateToken(user, roles);
+            // Generate JWT token
+            var tokenResult = _jwtHelper.GenerateToken(
+                user,
+                roles
+            );
 
+            // Prepare response — mark Expiration as UTC so it serialises with 'Z'
             var response = new AuthResponseDto
             {
                 UserId = user.Id,
@@ -138,7 +165,7 @@ namespace PharmacyOrderingAPI.Controllers
                 Email = user.Email!,
                 Role = roles[0],
                 Token = tokenResult.Token,
-                Expiration = tokenResult.Expiration
+                Expiration = DateTime.SpecifyKind(tokenResult.Expiration, DateTimeKind.Utc)
             };
 
             return Ok(response);

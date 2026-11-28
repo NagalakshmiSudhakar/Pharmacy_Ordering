@@ -17,6 +17,17 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+Console.WriteLine("Environment: " + builder.Environment.EnvironmentName);
+
+Console.WriteLine("Admin FullName loaded: " +
+    !string.IsNullOrWhiteSpace(builder.Configuration["AdminSeed:FullName"]));
+
+Console.WriteLine("Admin Email loaded: " +
+    !string.IsNullOrWhiteSpace(builder.Configuration["AdminSeed:Email"]));
+
+Console.WriteLine("Admin Password loaded: " +
+    !string.IsNullOrWhiteSpace(builder.Configuration["AdminSeed:Password"]));
+
 // Controllers and OpenAPI
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
@@ -137,10 +148,10 @@ var app = builder.Build();
 // Seed roles and Admin account
 using (var scope = app.Services.CreateScope())
 {
-    var seeder = scope.ServiceProvider
+    var roleSeeder = scope.ServiceProvider
         .GetRequiredService<RoleSeeder>();
 
-    await seeder.SeedAsync();
+    await roleSeeder.SeedRolesAndAdminAsync();
 }
 
 // OpenAPI

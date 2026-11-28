@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PharmacyOrderingAPI.Services;
 using PharmacyOrderingAPI.DTOs;
 using PharmacyOrderingAPI.Services.Interfaces;
@@ -17,14 +18,14 @@ public class MedicinesController : ControllerBase
     }
 
     [HttpGet]
-
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
         return Ok(await _service.GetAllAsync());
     }
 
     [HttpGet("{id}")]
-
+    [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
         var medicine = await _service.GetByIdAsync(id);
@@ -36,7 +37,7 @@ public class MedicinesController : ControllerBase
     }
 
     [HttpGet("search")]
-
+    [AllowAnonymous]
     public async Task<IActionResult> Search(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -46,14 +47,14 @@ public class MedicinesController : ControllerBase
     }
 
     [HttpGet("category/{category}")]
-
+    [AllowAnonymous]
     public async Task<IActionResult> GetByCategory(string category)
     {
         return Ok(await _service.GetByCategoryAsync(category));
     }
 
     [HttpPost]
-
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create(CreateMedicineDto dto)
     {
         var medicine = await _service.CreateAsync(dto);
@@ -65,7 +66,7 @@ public class MedicinesController : ControllerBase
     }
 
     [HttpPut("{id}")]
-
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(
         int id,
         UpdateMedicineDto dto)
@@ -79,6 +80,7 @@ public class MedicinesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Deactivate(int id)
     {
         var result = await _service.DeactivateAsync(id);
