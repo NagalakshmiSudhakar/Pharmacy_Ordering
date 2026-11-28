@@ -1,0 +1,103 @@
+<section class="welcome-section">
+  <h1>Welcome back, {{ authService.currentUser()?.fullName || 'Customer' }}!</h1>
+  <p>Manage your medicine orders, track deliveries, and checkout securely.</p>
+</section>
+
+<section class="stats-grid">
+  <article class="stat-card">
+    <div class="stat-icon green">📦</div>
+    <div>
+      <p>Total Orders</p>
+      <h2>{{ totalOrders() }}</h2>
+    </div>
+  </article>
+
+  <article class="stat-card">
+    <div class="stat-icon blue">🚚</div>
+    <div>
+      <p>Active Orders</p>
+      <h2>{{ activeOrders() }}</h2>
+    </div>
+  </article>
+
+  <article class="stat-card">
+    <div class="stat-icon orange">🛒</div>
+    <div>
+      <p>Items in Cart</p>
+      <h2>{{ cartService.cartCount() }}</h2>
+    </div>
+  </article>
+
+  <article class="stat-card">
+    <div class="stat-icon purple">💳</div>
+    <div>
+      <p>Total Spent</p>
+      <h2>₹{{ totalSpent() | number:'1.2-2' }}</h2>
+    </div>
+  </article>
+</section>
+
+<section class="quick-actions">
+  <h2>Quick Actions</h2>
+  <div class="action-grid">
+    <a routerLink="/customer/medicines" class="action-card">
+      <span>💊</span>
+      <h3>Browse Medicines</h3>
+      <p>Search available healthcare products and add to cart.</p>
+    </a>
+
+    <a routerLink="/customer/cart" class="action-card">
+      <span>🛒</span>
+      <h3>Review Cart & Pay</h3>
+      <p>Update quantities and proceed to checkout & payment.</p>
+    </a>
+
+    <a routerLink="/customer/orders" class="action-card">
+      <span>📋</span>
+      <h3>My Orders & Receipts</h3>
+      <p>Track order status, download receipts, or cancel eligible orders.</p>
+    </a>
+  </div>
+</section>
+
+<section class="recent-orders">
+  <div class="section-header">
+    <h2>Recent Orders</h2>
+    <a routerLink="/customer/orders" class="view-all">View All Orders →</a>
+  </div>
+
+  <div *ngIf="isLoading()" class="info-box">Loading your orders...</div>
+  <div *ngIf="errorMessage()" class="error-box">{{ errorMessage() }}</div>
+
+  <div *ngIf="!isLoading() && !errorMessage() && recentOrders().length === 0" class="info-box">
+    You haven't placed any orders yet.
+    <a routerLink="/customer/medicines">Browse medicines</a> to place your first order!
+  </div>
+
+  <div class="table-wrap" *ngIf="!isLoading() && !errorMessage() && recentOrders().length > 0">
+    <table>
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Date</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of recentOrders()">
+          <td><strong>#{{ order.orderId }}</strong></td>
+          <td>{{ order.orderDate | date:'mediumDate' }}</td>
+          <td>{{ order.orderItems.length }} item(s)</td>
+          <td><strong>₹{{ order.totalAmount | number:'1.2-2' }}</strong></td>
+          <td>
+            <span class="status-badge" [ngClass]="statusClass(order.orderStatus)">
+              {{ statusLabel(order.orderStatus) }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

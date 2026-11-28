@@ -1,0 +1,256 @@
+<div class="checkout-header">
+  <div>
+    <h1>Checkout & Payment</h1>
+    <p>Complete your delivery details and payment to confirm your order.</p>
+  </div>
+  <a routerLink="/customer/cart" class="back-link" *ngIf="!placedOrder()">← Back to Cart</a>
+</div>
+
+<div class="alert-error" *ngIf="errorMessage()">
+  ⚠ {{ errorMessage() }}
+</div>
+
+<!-- Order & Payment Confirmation Receipt -->
+<section class="receipt-card" *ngIf="placedOrder() as order">
+  <div class="receipt-badge">✓</div>
+  <h2>Order & Payment Confirmed!</h2>
+  <p class="receipt-subtitle">
+    Thank you for ordering with PharmaCare. Your medicines are being prepared.
+  </p>
+
+  <div class="receipt-grid" *ngIf="paymentReceipt() as receipt">
+    <div>
+      <span>Order Number</span>
+      <strong>#{{ order.orderId }}</strong>
+    </div>
+    <div>
+      <span>Transaction ID</span>
+      <strong>{{ receipt.transactionId }}</strong>
+    </div>
+    <div>
+      <span>Payment Method</span>
+      <strong>{{ receipt.paymentSummary }}</strong>
+    </div>
+    <div>
+      <span>Payment Status</span>
+      <strong class="paid-text">{{ receipt.paymentStatus }}</strong>
+    </div>
+    <div>
+      <span>Amount</span>
+      <strong>₹{{ order.totalAmount | number:'1.2-2' }}</strong>
+    </div>
+    <div>
+      <span>Delivery To</span>
+      <strong>
+        {{ receipt.deliveryName }}, {{ receipt.deliveryAddress }}, {{ receipt.city }} - {{ receipt.pincode }}
+      </strong>
+    </div>
+  </div>
+
+  <div class="receipt-items">
+    <h3>Items Ordered</h3>
+    <div class="receipt-item" *ngFor="let item of order.orderItems">
+      <span>{{ item.medicineName }} × {{ item.quantity }}</span>
+      <strong>₹{{ item.subTotal | number:'1.2-2' }}</strong>
+    </div>
+  </div>
+
+  <div class="receipt-actions">
+    <a routerLink="/customer/orders" class="primary-btn">Track My Orders →</a>
+    <a routerLink="/customer/medicines" class="secondary-btn">Continue Shopping</a>
+  </div>
+</section>
+
+<!-- Empty Cart State -->
+<section
+  class="empty-box"
+  *ngIf="!placedOrder() && !cartService.isLoading() && cartService.cartItems().length === 0"
+>
+  <h2>Your cart is empty</h2>
+  <p>Add medicines to your cart before proceeding to checkout.</p>
+  <a routerLink="/customer/medicines" class="primary-btn">Browse Medicines</a>
+</section>
+
+<!-- Checkout Form -->
+<div
+  class="checkout-grid"
+  *ngIf="!placedOrder() && cartService.cartItems().length > 0"
+>
+  <form [formGroup]="checkoutForm" (ngSubmit)="placeAndPayOrder()" class="checkout-form">
+    <section class="panel">
+      <h2>1. Delivery Details</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Recipient Full Name</label>
+          <input type="text" formControlName="fullName" placeholder="Full name" />
+          <small *ngIf="checkoutForm.get('fullName')?.touched && checkoutForm.get('fullName')?.invalid">
+            Please enter recipient full name.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" formControlName="phoneNumber" placeholder="10-digit mobile number" />
+          <small *ngIf="checkoutForm.get('phoneNumber')?.touched && checkoutForm.get('phoneNumber')?.invalid">
+            Enter a valid 10-digit phone number.
+          </small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Street Address</label>
+        <input type="text" formControlName="streetAddress" placeholder="House no, street, landmark" />
+        <small *ngIf="checkoutForm.get('streetAddress')?.touched && checkoutForm.get('streetAddress')?.invalid">
+          Enter a complete delivery address.
+        </small>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" formControlName="city" placeholder="City" />
+          <small *ngIf="checkoutForm.get('city')?.touched && checkoutForm.get('city')?.invalid">
+            City is required.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Pincode</label>
+          <input type="text" formControlName="pincode" placeholder="6-digit pincode" />
+          <small *ngIf="checkoutForm.get('pincode')?.touched && checkoutForm.get('pincode')?.invalid">
+            Enter a valid 6-digit pincode.
+          </small>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>2. Payment Method</h2>
+
+      <div class="method-tabs">
+        <button
+          type="button"
+          [class.active]="selectedMethod() === 'Card'"
+          (click)="selectPaymentMethod('Card')"
+        >
+          💳 Card
+        </button>
+        <button
+          type="button"
+          [class.active]="selectedMethod() === 'UPI'"
+          (click)="selectPaymentMethod('UPI')"
+        >
+          📱 UPI
+        </button>
+        <button
+          type="button"
+          [class.active]="selectedMethod() === 'NetBanking'"
+          (click)="selectPaymentMethod('NetBanking')"
+        >
+          🏦 Net Banking
+        </button>
+        <button
+          type="button"
+          [class.active]="selectedMethod() === 'COD'"
+          (click)="selectPaymentMethod('COD')"
+        >
+          💵 Cash on Delivery
+        </button>
+      </div>
+
+      <div *ngIf="selectedMethod() === 'Card'" class="payment-fields">
+        <div class="form-group">
+          <label>Cardholder Name</label>
+          <input type="text" formControlName="cardHolder" placeholder="Name on card" />
+          <small *ngIf="checkoutForm.get('cardHolder')?.touched && checkoutForm.get('cardHolder')?.invalid">
+            Cardholder name is required.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Card Number (16 digits)</label>
+          <input type="text" maxlength="16" formControlName="cardNumber" placeholder="1234567812345678" />
+          <small *ngIf="checkoutForm.get('cardNumber')?.touched && checkoutForm.get('cardNumber')?.invalid">
+            Enter a valid 16-digit card number.
+          </small>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Expiry (MM/YY)</label>
+            <input type="text" maxlength="5" formControlName="cardExpiry" placeholder="08/28" />
+            <small *ngIf="checkoutForm.get('cardExpiry')?.touched && checkoutForm.get('cardExpiry')?.invalid">
+              Use MM/YY format.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>CVV</label>
+            <input type="password" maxlength="4" formControlName="cardCvv" placeholder="123" />
+            <small *ngIf="checkoutForm.get('cardCvv')?.touched && checkoutForm.get('cardCvv')?.invalid">
+              Enter 3 or 4 digit CVV.
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="selectedMethod() === 'UPI'" class="payment-fields">
+        <div class="form-group">
+          <label>UPI ID</label>
+          <input type="text" formControlName="upiId" placeholder="yourname@okicici" />
+          <small *ngIf="checkoutForm.get('upiId')?.touched && checkoutForm.get('upiId')?.invalid">
+            Enter a valid UPI ID (e.g. name@upi).
+          </small>
+        </div>
+      </div>
+
+      <div *ngIf="selectedMethod() === 'NetBanking'" class="payment-fields">
+        <div class="form-group">
+          <label>Select Bank</label>
+          <select formControlName="bankName">
+            <option *ngFor="let bank of banks" [value]="bank">{{ bank }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div *ngIf="selectedMethod() === 'COD'" class="cod-note">
+        💵 Pay ₹{{ cartService.cartTotal() | number:'1.2-2' }} in cash or UPI upon delivery of your medicines.
+      </div>
+    </section>
+
+    <button type="submit" class="pay-btn" [disabled]="isProcessing()">
+      {{
+        isProcessing()
+          ? 'Processing Payment & Order...'
+          : selectedMethod() === 'COD'
+            ? 'Confirm Order (₹' + (cartService.cartTotal() | number:'1.2-2') + ')'
+            : 'Pay ₹' + (cartService.cartTotal() | number:'1.2-2') + ' & Place Order'
+      }}
+    </button>
+  </form>
+
+  <aside class="order-summary">
+    <h2>Order Summary</h2>
+
+    <div class="summary-items">
+      <div class="summary-item" *ngFor="let item of cartService.cartItems()">
+        <div>
+          <strong>{{ item.medicineName }}</strong>
+          <small>Qty: {{ item.quantity }} × ₹{{ item.unitPrice | number:'1.2-2' }}</small>
+        </div>
+        <span>₹{{ item.subTotal | number:'1.2-2' }}</span>
+      </div>
+    </div>
+
+    <div class="summary-row">
+      <span>Delivery</span>
+      <span class="free">Free</span>
+    </div>
+
+    <div class="summary-total">
+      <span>Total Payable</span>
+      <strong>₹{{ cartService.cartTotal() | number:'1.2-2' }}</strong>
+    </div>
+  </aside>
+</div>

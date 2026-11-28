@@ -1,0 +1,125 @@
+<div class="page-header">
+  <div>
+    <h1>Manage Customer Orders</h1>
+    <p>Inspect order items, payment details, and update fulfillment status.</p>
+  </div>
+  <button type="button" class="refresh-btn" (click)="loadOrders()">
+    ↻ Refresh
+  </button>
+</div>
+
+<div class="alert alert-success" *ngIf="successMessage()">
+  ✓ {{ successMessage() }}
+</div>
+
+<div class="alert alert-error" *ngIf="errorMessage()">
+  ⚠ {{ errorMessage() }}
+</div>
+
+<div class="toolbar">
+  <input
+    type="text"
+    class="search-input"
+    placeholder="Search by Order ID, Customer ID, or medicine..."
+    [ngModel]="searchTerm()"
+    (ngModelChange)="searchTerm.set($event)"
+  />
+
+  <div class="filter-pills">
+    <button
+      type="button"
+      class="pill"
+      *ngFor="let f of statusFilters"
+      [class.active]="selectedFilter() === f.value"
+      (click)="selectedFilter.set(f.value)"
+    >
+      {{ f.label }}
+    </button>
+  </div>
+</div>
+
+<div class="state-box" *ngIf="isLoading()">Loading customer orders...</div>
+
+<div class="state-box" *ngIf="!isLoading() && filteredOrders().length === 0">
+  No orders match your current filter.
+</div>
+
+<div class="orders-list" *ngIf="!isLoading() && filteredOrders().length > 0">
+  <article class="order-card" *ngFor="let order of filteredOrders()">
+    <div class="order-summary-row">
+      <div class="order-meta">
+        <h3>Order #{{ order.orderId }}</h3>
+        <small>
+          Customer: <span class="mono">{{ order.userId }}</span> ·
+          {{ order.orderDate | date:'medium' }}
+        </small>
+      </div>
+
+      <div class="order-controls">
+        <strong class="total">₹{{ order.totalAmount | number:'1.2-2' }}</strong>
+
+        <span class="status-badge" [ngClass]="statusClass(order.orderStatus)">
+          {{ statusLabel(order.orderStatus) }}
+        </span>
+
+        <div class="status-updater" *ngIf="!isLocked(order)">
+          <select
+            [ngModel]="getSelectedStatus(order)"
+            (ngModelChange)="onStatusSelect(order.orderId, $event)"
+          >
+            <option *ngFor="let st of updatableStatuses" [ngValue]="st.value">
+              {{ st.label }}
+            </option>
+          </select>
+
+          <button
+            type="button"
+            class="update-btn"
+            [disabled]="
+              updatingOrderId() === order.orderId ||
+              getSelectedStatus(order) === order.orderStatus
+            "
+            (click)="updateStatus(order)"
+          >
+            {{ updatingOrderId() === order.orderId ? 'Saving...' : 'Update' }}
+          </button>
+        </div>
+
+        <button
+          type="button"
+          class="details-btn"
+          (click)="toggleExpand(order.orderId)"
+        >
+          {{ expandedOrderId() === order.orderId ? 'Hide Items' : 'View Items (' + order.orderItems.length + ')' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="order-details" *ngIf="expandedOrderId() === order.orderId">
+      <table>
+        <thead>
+          <tr>
+            <th>Medicine</th>
+            <th>Unit Price</th>
+            <th>Quantity</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of order.orderItems">
+            <td>{{ item.medicineName }}</td>
+            <td>₹{{ item.unitPrice | number:'1.2-2' }}</td>
+            <td>{{ item.quantity }}</td>
+            <td><strong>₹{{ item.subTotal | number:'1.2-2' }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="payment-info" *ngIf="getPayment(order.orderId) as payment">
+        <span><strong>Transaction:</strong> {{ payment.transactionId }}</span>
+        <span><strong>Method:</strong> {{ payment.paymentSummary }} ({{ payment.paymentStatus }})</span>
+        <span><strong>Address:</strong> {{ payment.deliveryName }}, {{ payment.deliveryAddress }}, {{ payment.city }} - {{ payment.pincode }}</span>
+      </div>
+    </div>
+  </article>
+</div>
