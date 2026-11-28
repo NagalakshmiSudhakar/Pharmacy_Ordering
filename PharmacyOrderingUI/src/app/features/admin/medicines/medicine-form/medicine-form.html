@@ -1,0 +1,109 @@
+<div class="page-header">
+  <div>
+    <h1>{{ isEditMode() ? 'Edit Medicine' : 'Add New Medicine' }}</h1>
+    <p>
+      {{
+        isEditMode()
+          ? 'Update medicine pricing, stock quantity, or details.'
+          : 'Create a new medicine entry in the PharmaCare catalogue.'
+      }}
+    </p>
+  </div>
+  <a routerLink="/admin/medicines" class="back-btn">← Back to Medicines</a>
+</div>
+
+<div class="state-box" *ngIf="isLoading()">Loading medicine details...</div>
+
+<div class="form-card" *ngIf="!isLoading()">
+  <div class="alert alert-error" *ngIf="errorMessage()">
+    ⚠ {{ errorMessage() }}
+  </div>
+
+  <div class="alert alert-success" *ngIf="successMessage()">
+    ✓ {{ successMessage() }}
+  </div>
+
+  <form [formGroup]="medicineForm" (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Medicine Name</label>
+        <input
+          type="text"
+          formControlName="name"
+          placeholder="e.g. Paracetamol 500mg"
+        />
+        <small *ngIf="medicineForm.get('name')?.touched && medicineForm.get('name')?.invalid">
+          Medicine name is required (max 100 chars).
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label>Category</label>
+        <select formControlName="category">
+          <option *ngFor="let cat of categoryOptions" [value]="cat">
+            {{ cat }}
+          </option>
+        </select>
+        <small *ngIf="medicineForm.get('category')?.touched && medicineForm.get('category')?.invalid">
+          Category is required.
+        </small>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Description</label>
+      <textarea
+        rows="4"
+        formControlName="description"
+        placeholder="Describe usage, dosage instructions, and pack size..."
+      ></textarea>
+      <small *ngIf="medicineForm.get('description')?.touched && medicineForm.get('description')?.invalid">
+        Description is required (max 500 chars).
+      </small>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Price (₹)</label>
+        <input type="number" step="0.01" formControlName="price" />
+        <small *ngIf="medicineForm.get('price')?.touched && medicineForm.get('price')?.invalid">
+          Price must be between 0.01 and 100,000.
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label>Stock Quantity</label>
+        <input type="number" formControlName="stockQuantity" />
+        <small *ngIf="medicineForm.get('stockQuantity')?.touched && medicineForm.get('stockQuantity')?.invalid">
+          Stock quantity must be between 0 and 100,000.
+        </small>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Image URL (Optional)</label>
+      <input
+        type="url"
+        formControlName="imageUrl"
+        placeholder="https://example.com/medicine.png"
+      />
+    </div>
+
+    <div class="image-preview" *ngIf="medicineForm.get('imageUrl')?.value">
+      <img [src]="medicineForm.get('imageUrl')?.value" alt="Medicine preview" />
+    </div>
+
+    <div class="form-actions">
+      <a routerLink="/admin/medicines" class="cancel-btn">Cancel</a>
+      <button type="submit" class="save-btn" [disabled]="isSaving()">
+        {{
+          isSaving()
+            ? 'Saving...'
+            : isEditMode()
+              ? 'Update Medicine'
+              : 'Add Medicine'
+        }}
+      </button>
+    </div>
+  </form>
+</div>

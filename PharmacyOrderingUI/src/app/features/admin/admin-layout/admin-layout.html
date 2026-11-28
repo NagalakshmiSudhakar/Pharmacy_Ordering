@@ -1,0 +1,74 @@
+<div class="admin-layout">
+  <aside class="sidebar">
+    <a routerLink="/" class="admin-logo">
+      <span>✚</span> PharmaCare
+    </a>
+
+    <p class="menu-label">ADMIN MANAGEMENT</p>
+
+    <nav class="sidebar-nav">
+      <a
+        routerLink="/admin/dashboard"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        <span>▦</span> Dashboard
+      </a>
+
+      <a
+        routerLink="/admin/medicines"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-link"
+      >
+        <span>💊</span> Manage Medicines
+      </a>
+
+      <a
+        routerLink="/admin/medicines/add"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        <span>＋</span> Add Medicine
+      </a>
+
+      <a
+        routerLink="/admin/orders"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        <span>📦</span> Manage Orders
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <a routerLink="/" class="nav-link">
+        <span>↩</span> Back to Website
+      </a>
+      <button type="button" class="nav-link logout-link" (click)="logout()">
+        <span>⏻</span> Logout
+      </button>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="topbar">
+      <div>
+        <h2>Admin Dashboard</h2>
+        <p>Manage pharmacy inventory, customer orders, and fulfillment.</p>
+      </div>
+
+      <div class="admin-profile">
+        <span>👤</span>
+        <div>
+          <strong>{{ authService.currentUser()?.fullName || 'Administrator' }}</strong>
+          <small>{{ authService.currentUser()?.email || 'Admin Panel' }}</small>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

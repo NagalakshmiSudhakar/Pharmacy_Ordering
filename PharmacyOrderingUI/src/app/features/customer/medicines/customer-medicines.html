@@ -1,0 +1,90 @@
+<div class="catalog-header">
+  <div>
+    <h1>Medicine Catalog</h1>
+    <p>Select medicines and add them directly to your cart.</p>
+  </div>
+  <a routerLink="/customer/cart" class="cart-link-btn">Go to Cart →</a>
+</div>
+
+<div class="alert alert-success" *ngIf="feedbackMessage()">
+  ✓ {{ feedbackMessage() }}
+  <a routerLink="/customer/cart">View Cart</a>
+</div>
+
+<div class="alert alert-error" *ngIf="feedbackError()">
+  ⚠ {{ feedbackError() }}
+</div>
+
+<div class="toolbar">
+  <input
+    type="text"
+    class="search-input"
+    placeholder="Search medicines by name, category, or description..."
+    [ngModel]="searchTerm()"
+    (ngModelChange)="searchTerm.set($event)"
+  />
+
+  <div class="category-pills">
+    <button
+      type="button"
+      class="pill"
+      *ngFor="let cat of categories()"
+      [class.active]="selectedCategory() === cat"
+      (click)="selectedCategory.set(cat)"
+    >
+      {{ cat }}
+    </button>
+  </div>
+</div>
+
+<div class="state-box" *ngIf="isLoading()">Loading medicines...</div>
+<div class="state-box error" *ngIf="errorMessage()">{{ errorMessage() }}</div>
+<div class="state-box" *ngIf="!isLoading() && !errorMessage() && filteredMedicines().length === 0">
+  No medicines match your search criteria.
+</div>
+
+<div class="medicine-grid" *ngIf="!isLoading() && !errorMessage() && filteredMedicines().length > 0">
+  <article class="medicine-card" *ngFor="let medicine of filteredMedicines()">
+    <div class="medicine-thumb">
+      <img *ngIf="medicine.imageUrl" [src]="medicine.imageUrl" [alt]="medicine.name" />
+      <span *ngIf="!medicine.imageUrl">💊</span>
+    </div>
+
+    <div class="medicine-body">
+      <div class="card-meta">
+        <span class="badge">{{ medicine.category }}</span>
+        <span class="stock" [class.empty]="medicine.stockQuantity === 0">
+          {{ medicine.stockQuantity > 0 ? medicine.stockQuantity + ' in stock' : 'Out of Stock' }}
+        </span>
+      </div>
+
+      <h3>{{ medicine.name }}</h3>
+      <p class="desc">{{ medicine.description }}</p>
+
+      <div class="price-row">
+        <strong>₹{{ medicine.price | number:'1.2-2' }}</strong>
+
+        <div class="qty-picker" *ngIf="medicine.stockQuantity > 0">
+          <button type="button" (click)="setQty(medicine, -1)">−</button>
+          <span>{{ getQty(medicine.medicineId) }}</span>
+          <button type="button" (click)="setQty(medicine, 1)">+</button>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="add-btn"
+        [disabled]="medicine.stockQuantity === 0 || addingId() === medicine.medicineId"
+        (click)="addToCart(medicine)"
+      >
+        {{
+          medicine.stockQuantity === 0
+            ? 'Unavailable'
+            : addingId() === medicine.medicineId
+              ? 'Adding...'
+              : 'Add to Cart'
+        }}
+      </button>
+    </div>
+  </article>
+</div>

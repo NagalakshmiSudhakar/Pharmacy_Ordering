@@ -1,0 +1,82 @@
+<div class="portal-layout">
+  <aside class="sidebar">
+    <a routerLink="/" class="portal-logo">
+      <span>✚</span> PharmaCare
+    </a>
+
+    <p class="menu-label">CUSTOMER PORTAL</p>
+
+    <nav class="sidebar-nav">
+      <a
+        routerLink="/customer/dashboard"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        <span>▦</span> Dashboard
+      </a>
+
+      <a
+        routerLink="/customer/medicines"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        <span>💊</span> Browse Medicines
+      </a>
+
+      <a
+        routerLink="/customer/cart"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        <span>🛒</span> My Cart
+        <span class="nav-badge" *ngIf="cartService.cartCount() > 0">
+          {{ cartService.cartCount() }}
+        </span>
+      </a>
+
+      <a
+        routerLink="/customer/orders"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        <span>📦</span> My Orders
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <a routerLink="/" class="nav-link">
+        <span>↩</span> Storefront Home
+      </a>
+      <button type="button" class="nav-link logout-link" (click)="logout()">
+        <span>⏻</span> Logout
+      </button>
+    </div>
+  </aside>
+
+  <div class="portal-main">
+    <header class="topbar">
+      <div>
+        <h2>Customer Portal</h2>
+        <p>Browse medicines, manage your cart, and track orders.</p>
+      </div>
+
+      <div class="topbar-right">
+        <a routerLink="/customer/cart" class="quick-cart">
+          🛒 {{ cartService.cartCount() }} items · ₹{{ cartService.cartTotal() | number:'1.2-2' }}
+        </a>
+
+        <div class="user-profile">
+          <span>👤</span>
+          <div>
+            <strong>{{ authService.currentUser()?.fullName || 'Customer' }}</strong>
+            <small>{{ authService.currentUser()?.email }}</small>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
