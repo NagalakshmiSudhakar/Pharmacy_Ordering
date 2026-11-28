@@ -1,0 +1,79 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <a routerLink="/" class="logo">
+      <span class="logo-icon">✚</span>
+      PharmaCare
+    </a>
+
+    <div class="auth-heading">
+      <h1>Welcome Back!</h1>
+      <p>Login to access your PharmaCare account.</p>
+    </div>
+
+    <div class="alert alert-info" *ngIf="infoMessage()">
+      {{ infoMessage() }}
+    </div>
+
+    <div class="alert alert-error" *ngIf="errorMessage()">
+      {{ errorMessage() }}
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input
+          type="email"
+          formControlName="email"
+          placeholder="Enter your email"
+          autocomplete="email"
+        />
+
+        <small *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.errors?.['required']">
+          Email is required.
+        </small>
+
+        <small *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.errors?.['email']">
+          Enter a valid email address.
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <div class="password-field">
+          <input
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="togglePassword()"
+          >
+            {{ showPassword() ? 'Hide' : 'Show' }}
+          </button>
+        </div>
+
+        <small *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['required']">
+          Password is required.
+        </small>
+
+        <small *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['minlength']">
+          Password must contain at least 6 characters.
+        </small>
+      </div>
+
+      <button type="submit" class="auth-btn" [disabled]="isLoading()">
+        {{ isLoading() ? 'Signing in...' : 'Login' }}
+      </button>
+    </form>
+
+    <p class="auth-switch">
+      Don't have an account?
+      <a routerLink="/register">Create Account</a>
+    </p>
+
+    <a routerLink="/" class="back-home">← Back to Home</a>
+  </div>
+</div>

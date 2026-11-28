@@ -1,0 +1,132 @@
+<div class="page-header">
+  <div>
+    <h1>Manage Medicines</h1>
+    <p>View inventory, edit details, or deactivate medicines.</p>
+  </div>
+  <a routerLink="/admin/medicines/add" class="add-btn">+ Add Medicine</a>
+</div>
+
+<div class="alert alert-success" *ngIf="successMessage()">
+  ✓ {{ successMessage() }}
+</div>
+
+<div class="alert alert-error" *ngIf="errorMessage()">
+  ⚠ {{ errorMessage() }}
+</div>
+
+<div class="toolbar">
+  <input
+    type="text"
+    class="search-input"
+    placeholder="Search medicines..."
+    [ngModel]="searchTerm()"
+    (ngModelChange)="searchTerm.set($event)"
+  />
+
+  <select
+    class="filter-select"
+    [ngModel]="selectedCategory()"
+    (ngModelChange)="selectedCategory.set($event)"
+  >
+    <option *ngFor="let cat of categories()" [value]="cat">{{ cat }}</option>
+  </select>
+
+  <select
+    class="filter-select"
+    [ngModel]="stockFilter()"
+    (ngModelChange)="stockFilter.set($event)"
+  >
+    <option value="All">All Stock</option>
+    <option value="InStock">In Stock (&gt; 10)</option>
+    <option value="LowStock">Low Stock (1 - 10)</option>
+    <option value="OutOfStock">Out of Stock (0)</option>
+  </select>
+</div>
+
+<div class="state-box" *ngIf="isLoading()">Loading medicines...</div>
+
+<div class="state-box" *ngIf="!isLoading() && filteredMedicines().length === 0">
+  No medicines match your current filters.
+</div>
+
+<div class="table-card" *ngIf="!isLoading() && filteredMedicines().length > 0">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Medicine</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let medicine of filteredMedicines()">
+          <td>
+            <div class="med-cell">
+              <div class="med-thumb">
+                <img *ngIf="medicine.imageUrl" [src]="medicine.imageUrl" [alt]="medicine.name" />
+                <span *ngIf="!medicine.imageUrl">💊</span>
+              </div>
+              <div>
+                <strong>{{ medicine.name }}</strong>
+                <small>{{ medicine.description | slice:0:65 }}{{ medicine.description.length > 65 ? '...' : '' }}</small>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="cat-badge">{{ medicine.category }}</span>
+          </td>
+          <td><strong>₹{{ medicine.price | number:'1.2-2' }}</strong></td>
+          <td>
+            <span
+              class="stock-badge"
+              [class.out]="medicine.stockQuantity === 0"
+              [class.low]="medicine.stockQuantity > 0 && medicine.stockQuantity <= 10"
+            >
+              {{ medicine.stockQuantity }} units
+            </span>
+          </td>
+          <td>
+            <span class="active-badge" [class.inactive]="!medicine.isActive">
+              {{ medicine.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td>
+            <div class="actions" *ngIf="confirmDeactivateId() !== medicine.medicineId">
+              <a
+                [routerLink]="['/admin/medicines/edit', medicine.medicineId]"
+                class="edit-btn"
+              >
+                Edit
+              </a>
+              <button
+                type="button"
+                class="delete-btn"
+                (click)="requestDeactivate(medicine.medicineId)"
+              >
+                Deactivate
+              </button>
+            </div>
+
+            <div class="confirm-actions" *ngIf="confirmDeactivateId() === medicine.medicineId">
+              <button
+                type="button"
+                class="confirm-yes"
+                [disabled]="deactivatingId() === medicine.medicineId"
+                (click)="confirmDeactivate(medicine)"
+              >
+                {{ deactivatingId() === medicine.medicineId ? 'Saving...' : 'Confirm' }}
+              </button>
+              <button type="button" class="confirm-no" (click)="cancelDeactivate()">
+                Cancel
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

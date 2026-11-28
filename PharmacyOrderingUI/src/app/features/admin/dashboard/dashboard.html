@@ -1,0 +1,143 @@
+<section class="welcome-section">
+  <h1>Dashboard Overview</h1>
+  <p>Monitor pharmacy inventory, stock alerts, and customer orders.</p>
+</section>
+
+<div *ngIf="isLoading()" class="status-message">
+  Loading dashboard statistics...
+</div>
+
+<div *ngIf="errorMessage()" class="error-message">
+  {{ errorMessage() }}
+</div>
+
+<ng-container *ngIf="!isLoading() && !errorMessage()">
+  <h2 class="group-title">Inventory Summary</h2>
+  <section class="stats-grid">
+    <article class="stat-card">
+      <div class="stat-icon green">💊</div>
+      <div>
+        <p>Active Medicines</p>
+        <h2>{{ totalMedicines() }}</h2>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon blue">✓</div>
+      <div>
+        <p>In Stock</p>
+        <h2>{{ availableMedicines() }}</h2>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon orange">⚠</div>
+      <div>
+        <p>Low Stock (≤ 10)</p>
+        <h2>{{ lowStockMedicines() }}</h2>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon red">✕</div>
+      <div>
+        <p>Out of Stock</p>
+        <h2>{{ outOfStock() }}</h2>
+      </div>
+    </article>
+  </section>
+
+  <h2 class="group-title">Order & Revenue Summary</h2>
+  <section class="stats-grid">
+    <article class="stat-card">
+      <div class="stat-icon green">📦</div>
+      <div>
+        <p>Total Orders</p>
+        <h2>{{ totalOrders() }}</h2>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon orange">⏳</div>
+      <div>
+        <p>Needs Attention</p>
+        <h2>{{ pendingOrders() }}</h2>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon blue">🚚</div>
+      <div>
+        <p>Delivered Orders</p>
+        <h2>{{ deliveredOrders() }}</h2>
+      </div>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-icon purple">₹</div>
+      <div>
+        <p>Total Revenue</p>
+        <h2>₹{{ totalRevenue() | number:'1.2-2' }}</h2>
+      </div>
+    </article>
+  </section>
+</ng-container>
+
+<section class="quick-actions">
+  <h2>Quick Actions</h2>
+  <div class="action-grid">
+    <a routerLink="/admin/medicines/add" class="action-card">
+      <span>＋</span>
+      <h3>Add New Medicine</h3>
+      <p>Add a new medicine to your pharmacy catalogue.</p>
+    </a>
+
+    <a routerLink="/admin/medicines" class="action-card">
+      <span>📋</span>
+      <h3>Manage Medicines</h3>
+      <p>Search, update prices, adjust stock, or deactivate items.</p>
+    </a>
+
+    <a routerLink="/admin/orders" class="action-card">
+      <span>📦</span>
+      <h3>Manage Customer Orders</h3>
+      <p>Review placed orders and advance fulfillment status.</p>
+    </a>
+  </div>
+</section>
+
+<section class="recent-orders" *ngIf="recentOrders().length > 0">
+  <div class="section-header">
+    <h2>Recent Customer Orders</h2>
+    <a routerLink="/admin/orders" class="view-all">Manage All Orders →</a>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Customer ID</th>
+          <th>Date</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of recentOrders()">
+          <td><strong>#{{ order.orderId }}</strong></td>
+          <td class="mono">{{ order.userId | slice:0:12 }}...</td>
+          <td>{{ order.orderDate | date:'mediumDate' }}</td>
+          <td>{{ order.orderItems.length }} item(s)</td>
+          <td><strong>₹{{ order.totalAmount | number:'1.2-2' }}</strong></td>
+          <td>
+            <span class="status-badge" [ngClass]="statusClass(order.orderStatus)">
+              {{ statusLabel(order.orderStatus) }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

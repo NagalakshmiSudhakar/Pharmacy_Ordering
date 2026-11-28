@@ -1,0 +1,137 @@
+<div class="orders-header">
+  <div>
+    <h1>My Orders</h1>
+    <p>Track delivery progress, view payment receipts, or cancel eligible orders.</p>
+  </div>
+  <a routerLink="/customer/medicines" class="shop-btn">+ New Order</a>
+</div>
+
+<div class="alert alert-success" *ngIf="actionMessage()">
+  ✓ {{ actionMessage() }}
+</div>
+
+<div class="alert alert-error" *ngIf="errorMessage()">
+  ⚠ {{ errorMessage() }}
+</div>
+
+<div class="filter-bar">
+  <button
+    type="button"
+    class="filter-btn"
+    *ngFor="let f of statusFilters"
+    [class.active]="selectedFilter() === f.value"
+    (click)="selectedFilter.set(f.value)"
+  >
+    {{ f.label }}
+  </button>
+</div>
+
+<div class="state-box" *ngIf="isLoading()">Loading your orders...</div>
+
+<div class="state-box" *ngIf="!isLoading() && filteredOrders().length === 0">
+  <p>No orders found for the selected filter.</p>
+  <a routerLink="/customer/medicines" class="shop-btn">Browse Medicines</a>
+</div>
+
+<div class="orders-list" *ngIf="!isLoading() && filteredOrders().length > 0">
+  <article class="order-card" *ngFor="let order of filteredOrders()">
+    <div class="order-top">
+      <div>
+        <h3>Order #{{ order.orderId }}</h3>
+        <small>Placed on {{ order.orderDate | date:'medium' }}</small>
+      </div>
+
+      <div class="order-top-right">
+        <span class="status-badge" [ngClass]="statusClass(order.orderStatus)">
+          {{ statusLabel(order.orderStatus) }}
+        </span>
+        <strong class="order-total">₹{{ order.totalAmount | number:'1.2-2' }}</strong>
+      </div>
+    </div>
+
+    <!-- Stepper -->
+    <div
+      class="stepper"
+      *ngIf="order.orderStatus !== OrderStatus.Cancelled"
+    >
+      <div
+        class="step"
+        *ngFor="let s of progressSteps"
+        [class.done]="orderStep(order.orderStatus) >= s.step"
+      >
+        <div class="step-dot">{{ orderStep(order.orderStatus) >= s.step ? '✓' : s.step }}</div>
+        <span>{{ s.label }}</span>
+      </div>
+    </div>
+
+    <div class="cancelled-banner" *ngIf="order.orderStatus === OrderStatus.Cancelled">
+      ✕ This order was cancelled and medicine stock has been restored.
+    </div>
+
+    <!-- Order Items -->
+    <div class="items-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Medicine</th>
+            <th>Unit Price</th>
+            <th>Quantity</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of order.orderItems">
+            <td>{{ item.medicineName }}</td>
+            <td>₹{{ item.unitPrice | number:'1.2-2' }}</td>
+            <td>{{ item.quantity }}</td>
+            <td><strong>₹{{ item.subTotal | number:'1.2-2' }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Payment Receipt if recorded -->
+    <div class="payment-box" *ngIf="getPayment(order.orderId) as payment">
+      <div>
+        <span>Transaction ID:</span>
+        <strong>{{ payment.transactionId }}</strong>
+      </div>
+      <div>
+        <span>Payment:</span>
+        <strong>{{ payment.paymentSummary }} ({{ payment.paymentStatus }})</strong>
+      </div>
+      <div>
+        <span>Delivery To:</span>
+        <strong>{{ payment.deliveryName }}, {{ payment.deliveryAddress }}, {{ payment.city }}</strong>
+      </div>
+    </div>
+
+    <!-- Cancel Action -->
+    <div class="order-actions" *ngIf="canCancel(order)">
+      <ng-container *ngIf="confirmCancelId() !== order.orderId">
+        <button
+          type="button"
+          class="cancel-btn"
+          (click)="requestCancel(order.orderId)"
+        >
+          Cancel Order
+        </button>
+      </ng-container>
+
+      <div class="confirm-row" *ngIf="confirmCancelId() === order.orderId">
+        <span>Are you sure you want to cancel Order #{{ order.orderId }}?</span>
+        <button
+          type="button"
+          class="confirm-yes"
+          [disabled]="cancellingId() === order.orderId"
+          (click)="confirmCancel(order.orderId)"
+        >
+          {{ cancellingId() === order.orderId ? 'Cancelling...' : 'Yes, Cancel' }}
+        </button>
+        <button type="button" class="confirm-no" (click)="abortCancel()">
+          Keep Order
+        </button>
+      </div>
+    </div>
+  </article>
+</div>

@@ -1,0 +1,268 @@
+<header class="navbar">
+  <a class="logo" routerLink="/">
+    <span class="logo-icon">✚</span>
+    <span>PharmaCare</span>
+  </a>
+
+  <nav>
+    <a routerLink="/" fragment="home">Home</a>
+    <a routerLink="/" fragment="categories">Categories</a>
+    <a routerLink="/" fragment="products">Medicines</a>
+    <a routerLink="/" fragment="about">About Us</a>
+  </nav>
+
+  <div class="nav-actions" *ngIf="!authService.isLoggedIn()">
+    <a routerLink="/login" class="login-btn">Login</a>
+    <a routerLink="/register" class="register-btn">Sign Up</a>
+  </div>
+
+  <div class="nav-actions" *ngIf="authService.isCustomer()">
+    <a routerLink="/customer/cart" class="cart-pill">
+      🛒 Cart
+      <span class="cart-badge">{{ cartService.cartCount() }}</span>
+    </a>
+    <a routerLink="/customer/dashboard" class="register-btn">My Dashboard</a>
+    <button type="button" class="logout-btn" (click)="logout()">Logout</button>
+  </div>
+
+  <div class="nav-actions" *ngIf="authService.isAdmin()">
+    <a routerLink="/admin/dashboard" class="register-btn">Admin Panel</a>
+    <button type="button" class="logout-btn" (click)="logout()">Logout</button>
+  </div>
+</header>
+
+<div class="toast toast-success" *ngIf="toastMessage()">
+  ✓ {{ toastMessage() }}
+</div>
+<div class="toast toast-error" *ngIf="toastError()">
+  ⚠ {{ toastError() }}
+</div>
+
+<main>
+  <!-- Hero Section -->
+  <section class="hero" id="home">
+    <div class="hero-content">
+      <span class="eyebrow">YOUR HEALTH, OUR PRIORITY</span>
+
+      <h1>
+        Your Health Deserves
+        <span>Better Care.</span>
+      </h1>
+
+      <p>
+        Order your essential medicines online with ease.
+        Quality healthcare products delivered right to your doorstep.
+      </p>
+
+      <div class="hero-actions">
+        <a href="#products" class="primary-btn">
+          Explore Medicines →
+        </a>
+
+        <a
+          *ngIf="authService.isCustomer()"
+          routerLink="/customer/dashboard"
+          class="secondary-btn"
+        >
+          Go to Dashboard
+        </a>
+
+        <a
+          *ngIf="!authService.isLoggedIn()"
+          routerLink="/register"
+          class="secondary-btn"
+        >
+          Create Account
+        </a>
+      </div>
+
+      <div class="trust-info">
+        <span>✓ Trusted healthcare</span>
+        <span>✓ Easy ordering</span>
+        <span>✓ Secure checkout</span>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="medical-circle">
+        <div class="medical-cross">✚</div>
+
+        <div class="floating-card card-one">
+          💊 Quality Medicines
+        </div>
+
+        <div class="floating-card card-two">
+          ❤️ Health Comes First
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="categories section" id="categories">
+    <div class="section-heading">
+      <span class="eyebrow">EXPLORE OUR STORE</span>
+      <h2>Shop by Category</h2>
+      <p>Find the healthcare essentials you need.</p>
+    </div>
+
+    <div class="category-grid">
+      <article class="category-card" (click)="selectCategory('Medicines')">
+        <span>💊</span>
+        <h3>Medicines</h3>
+        <p>Everyday healthcare essentials</p>
+      </article>
+
+      <article class="category-card" (click)="selectCategory('First Aid')">
+        <span>🩹</span>
+        <h3>First Aid</h3>
+        <p>Care for everyday emergencies</p>
+      </article>
+
+      <article class="category-card" (click)="selectCategory('Personal Care')">
+        <span>🧴</span>
+        <h3>Personal Care</h3>
+        <p>Products for daily wellness</p>
+      </article>
+
+      <article class="category-card" (click)="selectCategory('Wellness')">
+        <span>🌿</span>
+        <h3>Wellness</h3>
+        <p>Support your healthy lifestyle</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Featured Medicines Section -->
+  <section class="products section" id="products">
+    <div class="section-heading">
+      <span class="eyebrow">OUR COLLECTION</span>
+      <h2>Featured Healthcare Products</h2>
+      <p>Discover products for your everyday healthcare needs.</p>
+    </div>
+
+    <div class="catalog-toolbar" *ngIf="!isLoading() && !errorMessage()">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search medicines by name, category, or description..."
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+      />
+
+      <div class="filter-pills">
+        <button
+          type="button"
+          class="pill-btn"
+          *ngFor="let cat of categories()"
+          [class.active]="selectedCategory() === cat"
+          (click)="selectCategory(cat)"
+        >
+          {{ cat }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading Message -->
+    <div class="empty-products" *ngIf="isLoading()">
+      <span>⏳</span>
+      <h3>Loading medicines...</h3>
+      <p>Please wait while we fetch our medicine catalogue.</p>
+    </div>
+
+    <!-- Error Message -->
+    <div class="empty-products" *ngIf="!isLoading() && errorMessage()">
+      <span>⚠️</span>
+      <h3>Something went wrong</h3>
+      <p>{{ errorMessage() }}</p>
+    </div>
+
+    <!-- Empty Medicines Message -->
+    <div
+      class="empty-products"
+      *ngIf="!isLoading() && !errorMessage() && filteredMedicines().length === 0"
+    >
+      <span>🛍️</span>
+      <h3>No medicines found</h3>
+      <p>Try adjusting your search or category filter.</p>
+    </div>
+
+    <!-- Medicine Cards -->
+    <div
+      class="medicine-grid"
+      *ngIf="!isLoading() && !errorMessage() && filteredMedicines().length > 0"
+    >
+      <article
+        class="medicine-card"
+        *ngFor="let medicine of filteredMedicines()"
+      >
+        <div class="medicine-image">
+          <img
+            *ngIf="medicine.imageUrl"
+            [src]="medicine.imageUrl"
+            [alt]="medicine.name"
+          />
+          <span *ngIf="!medicine.imageUrl">💊</span>
+        </div>
+
+        <div class="medicine-details">
+          <span class="medicine-category">
+            {{ medicine.category }}
+          </span>
+
+          <h3>{{ medicine.name }}</h3>
+
+          <p>{{ medicine.description }}</p>
+
+          <div class="medicine-bottom">
+            <strong>₹{{ medicine.price | number:'1.2-2' }}</strong>
+            <span [class.out-of-stock]="medicine.stockQuantity === 0">
+              {{ medicine.stockQuantity > 0 ? medicine.stockQuantity + ' in stock' : 'Out of stock' }}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            class="add-cart-btn"
+            [disabled]="medicine.stockQuantity === 0 || addingMedicineId() === medicine.medicineId"
+            (click)="addToCart(medicine)"
+          >
+            {{
+              medicine.stockQuantity === 0
+                ? 'Out of Stock'
+                : addingMedicineId() === medicine.medicineId
+                  ? 'Adding...'
+                  : authService.isLoggedIn()
+                    ? 'Add to Cart'
+                    : 'Login to Order'
+            }}
+          </button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="about-section" id="about">
+    <div>
+      <span class="eyebrow">ABOUT PHARMACARE</span>
+      <h2>Making healthcare simpler for everyone.</h2>
+    </div>
+
+    <p>
+      Our Pharmacy Ordering System helps customers browse medicines,
+      manage their shopping cart and place orders conveniently.
+      We aim to make your healthcare shopping experience simple and accessible.
+    </p>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer>
+  <a class="logo footer-logo" href="#">
+    <span class="logo-icon">✚</span>
+    PharmaCare
+  </a>
+
+  <p>© 2026 PharmaCare. Your health, our priority.</p>
+</footer>
